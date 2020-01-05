@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <script src="http://d3js.org/d3.v4.min.js" language="JavaScript"></script>
+  <script src="liquidFillGauge.js" language="JavaScript"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+
+  <style>
+    .liquidFillGaugeText {
+      font-family: Helvetica;
+      font-weight: bold;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    /*
+    .x.axis path {
+      display: none;
+    }
+    */
+    /* --------- */
+    .axis {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+
+    }
+
+    /* ------------- */
+    .column {
+      float: left;
+      width: 50%;
+      padding: 10px;
+      height: 400px;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    #circle_blue {
+      width: 25px;
+      height: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: #00D7FF;
+    }
+
+    #circle_green {
+      width: 25px;
+      height: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: #70F170;
+    }
+
+    #circle_yellow {
+      width: 25px;
+      height: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: #FFDC3C;
+    }
+
+    #circle_orange {
+      width: 25px;
+      height: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: #FFA500;
+    }
+
+    #circle_red {
+      width: 25px;
+      height: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+      border-radius: 25px;
+      background: #FF5050;
+    }
+
+    #mapid {
+      height: 360px;
+    }
+
+    .d3-tip {
+      line-height: 1;
+      font: 14px sans-serif;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      color: rgb(185, 185, 185);
+      border-radius: 2px;
+    }
+
+    /* Creates a small triangle extender for the tooltip */
+    .d3-tip:after {
+      box-sizing: border-box;
+      display: inline;
+      font-size: 10px;
+      width: 100%;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.8);
+      content: "\25BC";
+      position: absolute;
+      text-align: center;
+    }
+
+    .d3-tip.n:after {
+      margin: -1px 0 0 0;
+      top: 100%;
+      left: 0;
+    }
+
+    .bar:hover {
+      fill: #8c510a;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar" style="background-color: orange;">
+    <span class="navbar-brand mb-0 h1">Visualization PM2.5 by ฉุนสมุนไพร</span>
+    <p id="today"></p>
+  </nav>
+  <div class="row" style="margin-top: 20px;">
+    <div class="column">
+      <div class="row">
+        <div class="column" style="margin-top: 40px; margin-bottom: 20px;">
+          <h6 style="margin-left: 90px;">ปริมาณค่าฝุ่น pm2.5 (µg./m3)</h6>
+          <svg id="fillgauge4" width="100%" height="200" style="margin-top: 20px;"></svg>
+        </div>
+        <div class="column" style="margin-top: 100px;">
+          <div class="row">
+            <div class="column" id="circle_blue" style="margin-bottom: 10px;margin-top: 8px;"></div>
+            <div class="column" style="height: 10px;">
+              <h6>คุณภาพอากาศดีมาก</h6>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column" id="circle_green" style="margin-bottom: 10px;margin-top: 8px;"></div>
+            <div class="column" style="height: 10px;">
+              <h6>คุณภาพอากาศดี</h6>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column" id="circle_yellow" style="margin-bottom: 10px;margin-top: 8px;"></div>
+            <div class="column" style="height: 10px;">
+              <h6>คุณภาพอากาศปานกลาง</h6>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column" id="circle_orange" style="margin-bottom: 10px;margin-top: 8px;"></div>
+            <div class="column" style="height: 10px;">
+              <h6>เริ่มมีผลกระทบต่อสุขภาพ</h6>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column" id="circle_red" style="margin-bottom: 10px;margin-top: 8px;"></div>
+            <div class="column" style="height: 10px;">
+              <h6>มีผลกระทบต่อสุขภาพ</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column" style="background-color:#bbb;">
+      <div id="mapid"></div>
+    </div>
+    <div style="margin-left: 50px; margin-top: 50px;">
+      <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
+    </div>
+    <div id="graph" style="margin-left: 50px;margin-top: 10px;"></div>
+  </div>
+
+  <script src="initMap.js" language="JavaScript"></script>
+  <script src="dataProcess.js" language="JavaScript"></script>
+  <script>
+    var config3 = liquidFillGaugeDefaultSettings();
+    config3.textVertPosition = 0.5
+    config3.waveAnimateTime = 1000;
+    config3.valueCountUp = true;
+    config3.displayPercent = false;
+    config3.waveCount = 0.001;
+    config3.waveAnimateTime = 200000;
+    config3.circleThickness = 0.1;
+    config3.circleFillGap = 0.15;
+  </script>
+
+  <script>
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        var myObj = JSON.parse(this.responseText);
+        var result = [];
+        for (var i in myObj) {
+          result.push(myObj[i]);
+        }
+        var time = [];
+        var value = [];
+        var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
+        for (var j in result) {
+          if (result[j].DevEUI_uplink.Time.substring(0, 10) == toDay) {
+            var value_hex = subHex(result[j].DevEUI_uplink.payload_hex);
+            var value_dec = parseInt(value_hex, 16)
+            if (value_dec != 0 && value_dec != 191) {
+              time.push(result[j].DevEUI_uplink.Time.substring(11, 19));
+              value.push(value_dec);
+            }
+          }
+        }
+        document.getElementById("today").innerHTML = toDay;
+        var csvData = convertToCSV(time, value)
+        //console.log(csvData)
+        var arrData = convertToARR(time, value)
+        //console.log(arrData)
+        var jsonData = convertToJSON(time, value)
+        //console.log(jsonData)
+        //------------------------------------------- Bubble -----------------------------------------
+        if (value[value.length - 1] <= 25) {
+          // 0-25
+          config3.circleColor = "#00D7FF";
+          config3.textColor = "#0AC9FF";
+          config3.waveTextColor = "#0AC9FF";
+          config3.waveColor = "#C0FFFF";
+        }
+        else if (value[value.length - 1] <= 50) {
+          // 26-50
+          config3.circleColor = "#70F170";
+          config3.textColor = "#64CD3C";
+          config3.waveTextColor = "#64CD3C";
+          config3.waveColor = "#D2FFD2";
+        }
+        else if (value[value.length - 1] <= 100) {
+          // 51-100
+          config3.circleColor = "#FFDC3C";
+          config3.textColor = "#FFB400";
+          config3.waveTextColor = "#FFB400";
+          config3.waveColor = "#FAFAA0";
+        }
+        else if (value[value.length - 1] <= 200) {
+          // 101-200
+          config3.circleColor = "#FFA500";
+          config3.textColor = "#FF8200";
+          config3.waveTextColor = "#FF8200";
+          config3.waveColor = "#FADCA5";
+        }
+        else {
+          // 201 ->->
+          config3.circleColor = "#FF5050";
+          config3.textColor = "#EB0000";
+          config3.waveTextColor = "#EB0000";
+          config3.waveColor = "#FEBEBE";
+        }
+        var gauge4 = loadLiquidFillGauge("fillgauge4", value[value.length - 1], config3);
+
+        // ------------------------------------------ Bar Chart ------------------------------
+        var margin = { top: 40, right: 20, bottom: 70, left: 40 },
+          width = (value.length * 50) - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
+
+        var parseDate = d3.timeParse("%H:%M:%S");
+
+        var x = d3.scaleBand().rangeRound([0, width], .05).padding([0.1]);
+
+        var y = d3.scaleLinear().range([height, 0]);
+
+        var xAxis = d3.axisBottom()
+          .scale(x)
+          .tickFormat(d3.timeFormat("%H:%M:%S"));
+
+        var yAxis = d3.axisLeft()
+          .scale(y)
+          .ticks(15);
+
+        var tip = d3.tip()
+          .attr('class', 'd3-tip')
+          .offset([-10, 0])
+          .html(function (d) {
+            return "<div><span>Value of PM2.5:</span> <span style='color:white'>" + d.value + "</span></div>";
+          })
+        var svg = d3.select("#graph").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+        svg.call(tip);
+        var data = arrData.map(function (d) {
+          return {
+            date: parseDate(d[0]),
+            value: d[1]
+          };
+        })
+
+        x.domain(data.map(function (d) { return d.date; }));
+        y.domain([0, d3.max(data, function (d) { return d.value; })]);
+
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("dx", "-.8em")
+          .attr("dy", "-.55em")
+          .attr("transform", "rotate(-90)");
+
+        svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Value");
+
+        svg.selectAll(".bar")
+          .data(data)
+          .enter().append("rect")
+          // .style("fill", "steelblue")
+          .style("fill", function (d) { return d.value <= 25 ? "#00D7FF" : (d.value <= 50 ? "#70F170" : (d.value <= 100 ? "#FFDC3C" : (d.value <= 200 ? "#FFA500" : "#FF5050"))); })
+          .attr("x", function (d) { return x(d.date); })
+          .attr("width", x.bandwidth())
+          .attr("y", function (d) { return y(d.value); })
+          .attr("height", function (d) { return height - y(d.value); })
+          .on('mouseover',tip.show)
+          .on('mouseout', tip.hide)
+        // ------------------
+        
+        LAT = result[result.length - 1].DevEUI_uplink.LrrLAT;
+        LON = result[result.length - 1].DevEUI_uplink.LrrLON;
+        initMap(LAT, LON)
+      }
+    };
+    xmlhttp.open("GET", "https://tgr2020-quiz2.firebaseio.com/quiz/sensor/team07.json", true);
+    xmlhttp.send();
+  </script>
+</body>
+
+</html>
