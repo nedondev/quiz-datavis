@@ -424,6 +424,7 @@
             gauge4.update(selectedValue)
             document.getElementById("today").innerHTML = selectedDate;  
             marker.setLatLng(selectedCoord).update()
+            map.flyTo(selectedCoord, 13)
           })
       }
     };
