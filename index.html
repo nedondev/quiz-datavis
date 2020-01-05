@@ -212,9 +212,10 @@
     <div class="column45" style="background-color:#bbb;">
       <div id="mapid"></div>
     </div>
-    <div style="margin: auto;">
+    <div style="margin-top: 450px;"></div>
+    <div style=" margin:auto; ">
       <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
-      <div id="graph" style=" margin-left: 10px;margin-top: 30px; "></div>
+      <div id="graph" ></div>
     </div>
   </div>
 
@@ -351,7 +352,7 @@
           .openPopup();
         // ------------------------------------------ Bar Chart ------------------------------
         var margin = { top: 40, right: 20, bottom: 70, left: 40 },
-          width = (value.length * 70) - margin.left - margin.right,
+          width = 1200 - margin.left - margin.right,
           height = 500 - margin.top - margin.bottom;
 
         var parseDate = d3.timeParse("%Y-%m-%d");
