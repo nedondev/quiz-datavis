@@ -11,7 +11,7 @@
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
     integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-    crossorigin=""/>
+    crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
     integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
     crossorigin=""></script>
@@ -64,6 +64,7 @@
       padding: 10px;
       height: 400px;
     }
+
     .column45 {
       float: left;
       width: 45%;
@@ -165,12 +166,12 @@
   <nav class="navbar" style="background-color: orange;">
     <p id="today" style="font-size: 24px; margin-top: 20px;"></p>
     <span class="navbar-brand mb-0 h3">Visualization PM2.5 by ฉุนสมุนไพร</span>
-    
+
   </nav>
   <div class="row" style="margin-top: 20px;">
     <div class="column">
       <div class="row">
-        <div id="gaugetemp"class="column" style="margin-top: 20px; margin-bottom: 20px;">
+        <div id="gaugetemp" class="column" style="margin-top: 20px; margin-bottom: 20px;">
           <h5 style="margin-left: 60px;">ปริมาณค่าฝุ่น pm2.5 (µg./m3)</h5>
           <svg id="fillgauge4" width="100%" height="200" style="margin-top: 20px;"></svg>
         </div>
@@ -211,10 +212,10 @@
     <div class="column45" style="background-color:#bbb;">
       <div id="mapid"></div>
     </div>
-    <div style="margin-left: 50px; margin-top: 50px;">
+    <div style="margin: auto;">
       <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
-    
-    <div id="graph" style="margin-left: 10px;margin-top: 30px;"></div></div>
+      <div id="graph" style=" margin-left: 10px;margin-top: 30px; "></div>
+    </div>
   </div>
 
   <script src="initMap.js" language="JavaScript"></script>
@@ -251,13 +252,13 @@
         var latestLon = result[result.length - 1].DevEUI_uplink.LrrLON
 
         for (let index in result) {
-          let logDate = result[index].DevEUI_uplink.Time.substring(0,10)
+          let logDate = result[index].DevEUI_uplink.Time.substring(0, 10)
           let logValue = parseInt(subHex(result[index].DevEUI_uplink.payload_hex), 16)
 
           if (logValue !== 0 && logValue !== 191) {
             let timeIndex = time.indexOf(value)
             if (timeIndex === -1) {
-              LatLon.push([result[index].DevEUI_uplink.LrrLAT,result[index].DevEUI_uplink.LrrLON])
+              LatLon.push([result[index].DevEUI_uplink.LrrLAT, result[index].DevEUI_uplink.LrrLON])
               time.push(logDate)
               value.push(logValue)
             } else {
@@ -272,26 +273,27 @@
         let count = 0
         let lat_long = []
         check.push(time[0])
-    
-        for(let i in value){
-          if(i == value.length-1){
-            avglist.push(Math.ceil(sum/count))
+
+
+        for (let i in value) {
+          if (i == value.length - 1) {
+            avglist.push(Math.ceil(sum / count))
             lat_long.push(LatLon[i])
           }
-          if(!(check.includes(time[i]))){
-            lat_long.push(LatLon[i-1])
+          if (!(check.includes(time[i]))) {
+            lat_long.push(LatLon[i - 1])
             check.push(time[i])
-            avglist.push(Math.ceil(sum/count))
+            avglist.push(Math.ceil(sum / count))
             sum = value[i]
             count = 1
-          }else{
+          } else {
             count += 1
             sum += value[i]
           }
         }
         value = avglist
         time = check
- 
+
         document.getElementById("today").innerHTML = toDay;
         var csvData = convertToCSV(time, value)
         var arrData = convertToARR(time, value)
@@ -333,7 +335,7 @@
           config3.waveTextColor = "#EB0000";
           config3.waveColor = "#FEBEBE";
         }
-      
+
         // Selected day value gauge
         var gauge4 = loadLiquidFillGauge("fillgauge4", value[value.length - 1], config3);
 
@@ -342,8 +344,8 @@
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(map);
-        
+        }).addTo(map);
+
         var marker = L.marker([latestLat, latestLon]).addTo(map)
           .bindPopup('Data collected from here.')
           .openPopup();
@@ -427,17 +429,18 @@
             let selectedValue = data.value
             let selectedDate = check[index]
             let selectedCoord = lat_long[index]
-      
+
+
             config3.circleColor = selectedValue <= 25 ? "#00D7FF" : (selectedValue <= 50 ? "#70F170" : (selectedValue <= 100 ? "#FFDC3C" : (selectedValue <= 200 ? "#FFA500" : "#FF5050")))
             config3.textColor = selectedValue <= 25 ? "#0AC9FF" : (selectedValue <= 50 ? "#64CD3C" : (selectedValue <= 100 ? "#FFB400" : (selectedValue <= 200 ? "#FF8200" : "#EB0000")))
             config3.waveTextColor = selectedValue <= 25 ? "#0AC9FF" : (selectedValue <= 50 ? "#64CD3C" : (selectedValue <= 100 ? "#FFB400" : (selectedValue <= 200 ? "#FF8200" : "#EB0000")))
             config3.waveColor = selectedValue <= 25 ? "#C0FFFF" : (selectedValue <= 50 ? "#D2FFD2" : (selectedValue <= 100 ? "#FAFAA0" : (selectedValue <= 200 ? "#FADCA5" : "#FEBEBE")))
-            
+
             d3.select("#fillgauge4").remove();
-            d3.select("#gaugetemp").append("svg").attr("id","fillgauge4").attr("width", '100%').attr("height", 200).attr("style","margin-top: 20px");
+            d3.select("#gaugetemp").append("svg").attr("id", "fillgauge4").attr("width", '100%').attr("height", 200).attr("style", "margin-top: 20px");
             gauge4 = loadLiquidFillGauge("fillgauge4", selectedValue, config3)
-            
-            document.getElementById("today").innerHTML = selectedDate;  
+
+            document.getElementById("today").innerHTML = selectedDate;
             marker.setLatLng(selectedCoord).update()
             map.flyTo(selectedCoord, 13)
 
