@@ -228,15 +228,20 @@
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
+        // Fetching data from Firebase realtime database
         var myObj = JSON.parse(this.responseText);
         var result = [];
         for (var i in myObj) {
           result.push(myObj[i]);
         }
+
         var time = [];
         var value = [];
-        var logCount = [];
+        var LatLon = [];
         var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
+
+        var latestLat = result[result.length - 1].DevEUI_uplink.LrrLAT
+        var latestLon = result[result.length - 1].DevEUI_uplink.LrrLON
 
         for (let index in result) {
           let logDate = result[index].DevEUI_uplink.Time.substring(0,10)
@@ -245,25 +250,29 @@
           if (logValue !== 0 && logValue !== 191) {
             let timeIndex = time.indexOf(value)
             if (timeIndex === -1) {
+              LatLon.push([result[index].DevEUI_uplink.LrrLAT,result[index].DevEUI_uplink.LrrLON])
               time.push(logDate)
               value.push(logValue)
-              logCount.push(1)
             } else {
               value[timeIndex] += logValue
-              logCount[timeIndex]++
             }
           }
         }
+
         let check = []
         let sum = 0
         let avglist = []
         let count = 0
+        let lat_long = []
         check.push(time[0])
+    
         for(let i in value){
           if(i == value.length-1){
             avglist.push(Math.ceil(sum/count))
+            lat_long.push(LatLon[i])
           }
           if(!(check.includes(time[i]))){
+            lat_long.push(LatLon[i-1])
             check.push(time[i])
             avglist.push(Math.ceil(sum/count))
             sum = value[i]
@@ -278,12 +287,10 @@
  
         document.getElementById("today").innerHTML = toDay;
         var csvData = convertToCSV(time, value)
-        //console.log(csvData)
         var arrData = convertToARR(time, value)
-        //console.log(arrData)
         var jsonData = convertToJSON(time, value)
-        //console.log(jsonData)
         //------------------------------------------- Bubble -----------------------------------------
+
         if (value[value.length - 1] <= 25) {
           // 0-25
           config3.circleColor = "#00D7FF";
@@ -319,8 +326,20 @@
           config3.waveTextColor = "#EB0000";
           config3.waveColor = "#FEBEBE";
         }
+      
+        // Selected day value gauge
         var gauge4 = loadLiquidFillGauge("fillgauge4", value[value.length - 1], config3);
 
+        // Map
+        var map = L.map('mapid').setView([latestLat, latestLon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(map);
+        
+        var marker = L.marker([latestLat, latestLon]).addTo(map)
+          .bindPopup('Data collected from here.')
+          .openPopup();
         // ------------------------------------------ Bar Chart ------------------------------
         var margin = { top: 40, right: 20, bottom: 70, left: 40 },
           width = (value.length * 50) - margin.left - margin.right,
@@ -344,8 +363,9 @@
           .attr('class', 'd3-tip')
           .offset([-10, 0])
           .html(function (d) {
-            return "<div><span>Value of PM2.5:</span> <span style='color:white'>" + d.value + "</span></div>";
+            return "<div><span>Average Value of PM2.5:</span> <span style='color:white'>" + d.value + "</span></div>";
           })
+
         var svg = d3.select("#graph").append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
@@ -393,13 +413,18 @@
           .attr("width", x.bandwidth())
           .attr("y", function (d) { return y(d.value); })
           .attr("height", function (d) { return height - y(d.value); })
-          .on('mouseover',tip.show)
+          .on('mouseover', tip.show)
           .on('mouseout', tip.hide)
-        // ------------------
-        
-        LAT = result[result.length - 1].DevEUI_uplink.LrrLAT;
-        LON = result[result.length - 1].DevEUI_uplink.LrrLON;
-        initMap(LAT, LON)
+          .on('click', (data, index) => {
+            // Update map and gauge from clicked bar
+            let selectedValue = data.value
+            let selectedDate = check[index]
+            let selectedCoord = lat_long[index]
+
+            gauge4.update(selectedValue)
+            document.getElementById("today").innerHTML = selectedDate;  
+            marker.setLatLng(selectedCoord).update()
+          })
       }
     };
     xmlhttp.open("GET", "https://tgr2020-quiz2.firebaseio.com/quiz/sensor/team07.json", true);
