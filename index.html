@@ -206,8 +206,8 @@
     </div>
     <div style="margin-left: 50px; margin-top: 50px;">
       <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
-    </div>
-    <div id="graph" style="margin-left: 50px;margin-top: 10px;"></div>
+    
+    <div id="graph" style="margin-left: 10px;margin-top: 30px;"></div></div>
   </div>
 
   <script src="initMap.js" language="JavaScript"></script>
@@ -235,17 +235,52 @@
         }
         var time = [];
         var value = [];
+        var logCount = [];
         var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
-        for (var j in result) {
-          if (result[j].DevEUI_uplink.Time.substring(0, 10) == toDay) {
-            var value_hex = subHex(result[j].DevEUI_uplink.payload_hex);
-            var value_dec = parseInt(value_hex, 16)
-            if (value_dec != 0 && value_dec != 191) {
-              time.push(result[j].DevEUI_uplink.Time.substring(11, 19));
-              value.push(value_dec);
+
+        for (let index in result) {
+          let logDate = result[index].DevEUI_uplink.Time.substring(0,10)
+          let logValue = parseInt(subHex(result[index].DevEUI_uplink.payload_hex), 16)
+
+          if (logValue !== 0 && logValue !== 191) {
+            let timeIndex = time.indexOf(value)
+            if (timeIndex === -1) {
+              time.push(logDate)
+              value.push(logValue)
+              logCount.push(1)
+            } else {
+              value[timeIndex] += logValue
+              logCount[timeIndex]++
             }
           }
         }
+        let check = []
+        let sum = 0
+        let avglist = []
+        let count = 0
+        check.push(time[0])
+        for(let i in value){
+          if(i == value.length-1){
+            avglist.push(Math.ceil(sum/count))
+          }
+          if(!(check.includes(time[i]))){
+            check.push(time[i])
+            avglist.push(Math.ceil(sum/count))
+            sum = value[i]
+            count = 1
+          }else{
+            count += 1
+            sum += value[i]
+          }
+        }
+        value = avglist
+        time = check
+        // for (let i = 0; i < value.length; i++) {
+        //   value[i] /= logCount[i]
+        //   console.log(time[i], value[i])
+        // }
+        // console.log(value.length, time.length, logCount.length)
+
         document.getElementById("today").innerHTML = toDay;
         var csvData = convertToCSV(time, value)
         //console.log(csvData)
@@ -296,7 +331,7 @@
           width = (value.length * 50) - margin.left - margin.right,
           height = 500 - margin.top - margin.bottom;
 
-        var parseDate = d3.timeParse("%H:%M:%S");
+        var parseDate = d3.timeParse("%Y-%m-%d");
 
         var x = d3.scaleBand().rangeRound([0, width], .05).padding([0.1]);
 
@@ -304,7 +339,7 @@
 
         var xAxis = d3.axisBottom()
           .scale(x)
-          .tickFormat(d3.timeFormat("%H:%M:%S"));
+          .tickFormat(d3.timeFormat("%Y-%m-%d"));
 
         var yAxis = d3.axisLeft()
           .scale(y)
