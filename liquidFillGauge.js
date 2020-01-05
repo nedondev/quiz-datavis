@@ -225,7 +225,7 @@ function loadLiquidFillGauge(elementId, value, config) {
                 animateWave(config.waveAnimateTime);
             });
     }
-
+    
     function GaugeUpdater() {
         this.update = function (value) {
             var newFinalValue = parseFloat(value).toFixed(2);
@@ -311,6 +311,5 @@ function loadLiquidFillGauge(elementId, value, config) {
                 .attr('transform', 'translate(' + waveGroupXPosition + ',' + newHeight + ')')
         }
     }
-
     return new GaugeUpdater();
 }
