@@ -215,7 +215,7 @@
     <div style="margin-top: 450px;"></div>
     <div style=" margin:auto; ">
       <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
-      <div id="graph" ></div>
+      <div id="graph"></div>
     </div>
   </div>
 
@@ -249,8 +249,16 @@
         var LatLon = [];
         var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
 
-        var latestLat = result[result.length - 1].DevEUI_uplink.LrrLAT
-        var latestLon = result[result.length - 1].DevEUI_uplink.LrrLON
+
+        
+
+        i = result.length - 1
+        while (typeof (result[i].DevEUI_uplink.LrrLAT) == 'undefined' || typeof (result[i].DevEUI_uplink.LrrLON) == 'undefined') {
+          i -= 1
+        }
+
+        var latestLat = result[i].DevEUI_uplink.LrrLAT
+        var latestLon = result[i].DevEUI_uplink.LrrLON
 
         for (let index in result) {
           let logDate = result[index].DevEUI_uplink.Time.substring(0, 10)
@@ -279,10 +287,14 @@
         for (let i in value) {
           if (i == value.length - 1) {
             avglist.push(Math.ceil(sum / count))
-            lat_long.push(LatLon[i])
+            lat_long.push([latestLat,latestLon])
           }
           if (!(check.includes(time[i]))) {
-            lat_long.push(LatLon[i - 1])
+            let index_latlon = i - 1
+            while (typeof (LatLon[index_latlon][0]) == 'undefined' || typeof (LatLon[index_latlon][1]) == 'undefined') {
+              index_latlon -= 1
+            }
+            lat_long.push(LatLon[index_latlon])
             check.push(time[i])
             avglist.push(Math.ceil(sum / count))
             sum = value[i]
