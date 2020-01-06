@@ -232,42 +232,64 @@
     config3.circleThickness = 0.1;
     config3.circleFillGap = 0.15;
   </script>
-
   <script>
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-      if (this.readyState == 4 && this.status == 200) {
-        // Fetching data from Firebase realtime database
-        var myObj = JSON.parse(this.responseText);
-        var result = [];
-        for (var i in myObj) {
-          result.push(myObj[i]);
+
+    function loadXMLDoc(myurl, cb) {
+      var xmlhttp;
+      if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+      }
+      else {
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+      }
+
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          if (typeof cb === 'function')
+            cb(xmlhttp.responseText);
         }
+      }
+      xmlhttp.open("GET", myurl, true);
+      xmlhttp.send();
+    }
+    loadXMLDoc('https://tgr2020-quiz2.firebaseio.com/quiz/sensor/team07.json', function (responseText) {
+      x = JSON.parse(responseText)
+      result_sens = [];
+      for (var i in x) {
+        result_sens.push(x[i])
+      }
+      loadXMLDoc('https://tgr2020-quiz2.firebaseio.com/quiz/location/team07.json', function (responseText) {
+        y = JSON.parse(responseText)
+        result_loc = [];
+        for (var i in y) {
+          result_loc.push(y[i])
+        }
+
 
         var time = [];
         var value = [];
         var LatLon = [];
-        var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
+        var toDay = result_sens[result_sens.length - 1].DevEUI_uplink.Time.substring(0, 10)
 
 
 
 
-        i = result.length - 1
-        while (typeof (result[i].DevEUI_uplink.LrrLAT) == 'undefined' || typeof (result[i].DevEUI_uplink.LrrLON) == 'undefined') {
+
+        i = result_loc.length - 1
+        while (typeof (result_loc[i].latitude) == 'undefined' || typeof (result_loc[i].longitude) == 'undefined') {
           i -= 1
         }
 
-        var latestLat = result[i].DevEUI_uplink.LrrLAT
-        var latestLon = result[i].DevEUI_uplink.LrrLON
+        var latestLat = result_loc[i].latitude
+        var latestLon = result_loc[i].longitude
 
-        for (let index in result) {
-          let logDate = result[index].DevEUI_uplink.Time.substring(0, 10)
-          let logValue = parseInt(subHex(result[index].DevEUI_uplink.payload_hex), 16)
+        for (let index in result_sens) {
+          let logDate = result_sens[index].DevEUI_uplink.Time.substring(0, 10)
+          let logValue = parseInt(subHex(result_sens[index].DevEUI_uplink.payload_hex), 16)
 
           if (logValue !== 0 && logValue !== 191) {
             let timeIndex = time.indexOf(value)
             if (timeIndex === -1) {
-              LatLon.push([result[index].DevEUI_uplink.LrrLAT, result[index].DevEUI_uplink.LrrLON])
               time.push(logDate)
               value.push(logValue)
             } else {
@@ -284,42 +306,56 @@
         let maxlist = []
         let minlist = []
         let temp = []
+
         check.push(time[0])
+
 
 
         for (let i in value) {
           if (i == value.length - 1) {
-            // avglist.push(Math.ceil(sum / count))
+            
             maxlist.push(Math.max.apply(Math, temp))
             minlist.push(Math.min.apply(Math, temp))
             avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
-            lat_long.push([latestLat, latestLon])
+            
           }
           if (!(check.includes(time[i]))) {
-            let index_latlon = i - 1
-            while (typeof (LatLon[index_latlon][0]) == 'undefined' || typeof (LatLon[index_latlon][1]) == 'undefined') {
-              index_latlon -= 1
-            }
-            lat_long.push(LatLon[index_latlon])
             check.push(time[i])
             avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
             maxlist.push(Math.max.apply(Math, temp))
             minlist.push(Math.min.apply(Math, temp))
             temp = []
             temp.push(value[i])
-            // sum = value[i]
             count = 1
           } else {
             count += 1
-            // sum += value[i]
             temp.push(value[i])
           }
         }
         value = avglist
         time = check
 
-        console.log(maxlist)
-        console.log(minlist)
+
+        check = []
+        err_day = ["2019-12-31", "2020-01-02", "2020-01-03", "2020-01-04"]
+        check.push(result_loc[0].timestamp.substring(0, 10))
+        for (let index in result_loc) {
+          if (!(err_day.includes(result_loc[index].timestamp.substring(0, 10)))) {
+            if (!(check.includes(result_loc[index].timestamp.substring(0, 10)))) {
+              let index_latlon = index - 1
+              while (typeof (result_loc[index_latlon].latitude) == 'undefined' || typeof (result_loc[index_latlon].longitude) == 'undefined') {
+                index_latlon -= 1
+              }
+              lat_long.push([result_loc[index_latlon].latitude, result_loc[index_latlon].longitude])
+              check.push(result_loc[index].timestamp.substring(0, 10))
+            }
+          }
+
+        }
+
+
+
+        lat_long.push([latestLat, latestLon])
         document.getElementById("today").innerHTML = toDay;
         var csvData = convertToCSV(time, value)
         var arrData = convertToARR(time, value, minlist, maxlist)
@@ -473,11 +509,15 @@
             map.flyTo(selectedCoord, 13)
 
           })
-      }
-    };
-    xmlhttp.open("GET", "https://tgr2020-quiz2.firebaseio.com/quiz/sensor/team07.json", true);
-    xmlhttp.send();
+
+
+      });
+    });
+
+
+
   </script>
+
 </body>
 
 </html>
