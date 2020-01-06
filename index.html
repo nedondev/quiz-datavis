@@ -250,7 +250,7 @@
         var toDay = result[result.length - 1].DevEUI_uplink.Time.substring(0, 10)
 
 
-        
+
 
         i = result.length - 1
         while (typeof (result[i].DevEUI_uplink.LrrLAT) == 'undefined' || typeof (result[i].DevEUI_uplink.LrrLON) == 'undefined') {
@@ -281,13 +281,19 @@
         let avglist = []
         let count = 0
         let lat_long = []
+        let maxlist = []
+        let minlist = []
+        let temp = []
         check.push(time[0])
 
 
         for (let i in value) {
           if (i == value.length - 1) {
-            avglist.push(Math.ceil(sum / count))
-            lat_long.push([latestLat,latestLon])
+            // avglist.push(Math.ceil(sum / count))
+            maxlist.push(Math.max.apply(Math, temp))
+            minlist.push(Math.min.apply(Math, temp))
+            avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
+            lat_long.push([latestLat, latestLon])
           }
           if (!(check.includes(time[i]))) {
             let index_latlon = i - 1
@@ -296,20 +302,27 @@
             }
             lat_long.push(LatLon[index_latlon])
             check.push(time[i])
-            avglist.push(Math.ceil(sum / count))
-            sum = value[i]
+            avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
+            maxlist.push(Math.max.apply(Math, temp))
+            minlist.push(Math.min.apply(Math, temp))
+            temp = []
+            temp.push(value[i])
+            // sum = value[i]
             count = 1
           } else {
             count += 1
-            sum += value[i]
+            // sum += value[i]
+            temp.push(value[i])
           }
         }
         value = avglist
         time = check
 
+        console.log(maxlist)
+        console.log(minlist)
         document.getElementById("today").innerHTML = toDay;
         var csvData = convertToCSV(time, value)
-        var arrData = convertToARR(time, value)
+        var arrData = convertToARR(time, value, minlist, maxlist)
         var jsonData = convertToJSON(time, value)
         //------------------------------------------- Bubble -----------------------------------------
 
@@ -385,7 +398,7 @@
           .attr('class', 'd3-tip')
           .offset([-10, 0])
           .html(function (d) {
-            return "<div><span>Average Value of PM2.5:</span> <span style='color:white'>" + d.value + "</span></div>";
+            return "<div><h6>PM2.5</h6><span>Average : </span><span style='color:white'>" + d.value + "</span><br><span>Min :</span> <span style='color:white'>" + d.min + "</span><br><span>Max :</span> <span style='color:white'>" + d.max + "</span></div>";
           })
 
         var svg = d3.select("#graph").append("svg")
@@ -399,7 +412,9 @@
         var data = arrData.map(function (d) {
           return {
             date: parseDate(d[0]),
-            value: d[1]
+            value: d[1],
+            min: d[2],
+            max: d[3]
           };
         })
 

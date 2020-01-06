@@ -8,12 +8,14 @@ function convertToCSV(time, value) {
   }
   return str;
 }
-function convertToARR(time, value) {
+function convertToARR(time, value, minlist, maxlist) {
   var arr = []
   var row = []
   for (var i = 0; i < time.length; i++) {
     row.push(time[i]);
     row.push(value[i]);
+    row.push(minlist[i]);
+    row.push(maxlist[i]);
     arr.push(row);
     row = []
     //console.log(time[i].substring(0,5))
