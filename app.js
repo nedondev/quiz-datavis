@@ -80,9 +80,11 @@ async function sendData(){
     var delayInMilliseconds = 10000; 
     var data;
     await setTimeout(function() {
-        getJSON(process.env.DATA_URL, function(responseText, status) {
-            data = responseText;
-            io.sockets.emit('receive_data', data);
+        getJSON(process.env.TRACK_DATA_URL, function(track_data, status) {
+            getJSON(process.env.PM25_DATA_URL, function(pm25_data, status) {
+                data = {track_data, pm25_data};
+                io.sockets.emit('receive_data', data);
+            });
         });
     }, delayInMilliseconds);
 };
