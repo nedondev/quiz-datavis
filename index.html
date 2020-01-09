@@ -4,8 +4,21 @@
 <head lang="en">
   <meta charset="UTF-8">
   <title></title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+        const socket = io();
+        socket.on('connect', function(data){
+            console.log("Connection established: ", data);
+            socket.emit('request_data', data);
+        })
+        socket.on('receive_data', function(data){
+            console.log("receive: ", data)
+            socket.emit('request_data', data);
+        })
+</script>
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
   <script src="https://d3js.org/d3.v4.min.js" language="JavaScript"></script>
-  <script src="liquidFillGauge.js" language="JavaScript"></script>
+  <script src="js/liquidFillGauge.js" language="JavaScript"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <!-- Leaflet -->
@@ -219,8 +232,8 @@
     </div>
   </div>
 
-  <script src="initMap.js" language="JavaScript"></script>
-  <script src="dataProcess.js" language="JavaScript"></script>
+  <script src="js/initMap.js" language="JavaScript"></script>
+  <script src="js/dataProcess.js" language="JavaScript"></script>
   <script>
     var config3 = liquidFillGaugeDefaultSettings();
     config3.textVertPosition = 0.5
