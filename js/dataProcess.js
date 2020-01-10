@@ -18,7 +18,6 @@ function convertToARR(time, value, minlist, maxlist) {
     row.push(maxlist[i]);
     arr.push(row);
     row = []
-    //console.log(time[i].substring(0,5))
   }
   return arr;
 }

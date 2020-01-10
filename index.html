@@ -5,20 +5,8 @@
   <meta charset="UTF-8">
   <title></title>
   <script src="/socket.io/socket.io.js"></script>
-  <script>
-        const socket = io();
-        socket.on('connect', function(data){
-            console.log("Connection established: ", data);
-            socket.emit('request_data', data);
-        })
-        socket.on('receive_data', function(data){
-            console.log("receive: ", data)
-            socket.emit('request_data', data);
-        })
-</script>
-	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
   <script src="https://d3js.org/d3.v4.min.js" language="JavaScript"></script>
-  <script src="js/liquidFillGauge.js" language="JavaScript"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <!-- Leaflet -->
@@ -40,11 +28,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
 
   <style>
-    .liquidFillGaugeText {
-      font-family: Helvetica;
-      font-weight: bold;
-    }
-
     .axis path,
     .axis line {
       fill: none;
@@ -92,442 +75,339 @@
       clear: both;
     }
 
-    #circle_blue {
-      width: 25px;
-      height: 25px;
-      -webkit-border-radius: 25px;
-      -moz-border-radius: 25px;
-      border-radius: 25px;
-      background: #00D7FF;
-    }
-
-    #circle_green {
-      width: 25px;
-      height: 25px;
-      -webkit-border-radius: 25px;
-      -moz-border-radius: 25px;
-      border-radius: 25px;
-      background: #70F170;
-    }
-
-    #circle_yellow {
-      width: 25px;
-      height: 25px;
-      -webkit-border-radius: 25px;
-      -moz-border-radius: 25px;
-      border-radius: 25px;
-      background: #FFDC3C;
-    }
-
-    #circle_orange {
-      width: 25px;
-      height: 25px;
-      -webkit-border-radius: 25px;
-      -moz-border-radius: 25px;
-      border-radius: 25px;
-      background: #FFA500;
-    }
-
-    #circle_red {
-      width: 25px;
-      height: 25px;
-      -webkit-border-radius: 25px;
-      -moz-border-radius: 25px;
-      border-radius: 25px;
-      background: #FF5050;
-    }
-
     #mapid {
-      height: 360px;
-    }
-
-    .d3-tip {
-      line-height: 1;
-      font: 14px sans-serif;
-      padding: 12px;
-      background: rgba(0, 0, 0, 0.8);
-      color: rgb(185, 185, 185);
-      border-radius: 2px;
-    }
-
-    /* Creates a small triangle extender for the tooltip */
-    .d3-tip:after {
-      box-sizing: border-box;
-      display: inline;
-      font-size: 10px;
-      width: 100%;
-      line-height: 1;
-      color: rgba(0, 0, 0, 0.8);
-      content: "\25BC";
-      position: absolute;
-      text-align: center;
-    }
-
-    .d3-tip.n:after {
-      margin: -1px 0 0 0;
-      top: 100%;
-      left: 0;
-    }
-
-    .bar:hover {
-      fill: #8c510a;
+      height: 560px;
     }
   </style>
 </head>
 
 <body>
   <nav class="navbar" style="background-color: orange;">
-    <p id="today" style="font-size: 24px; margin-top: 20px;"></p>
     <span class="navbar-brand mb-0 h3">Visualization PM2.5 by ฉุนสมุนไพร</span>
-
   </nav>
-  <div class="row" style="margin-top: 20px;">
-    <div class="column">
-      <div class="row">
-        <div id="gaugetemp" class="column" style="margin-top: 20px; margin-bottom: 20px;">
-          <h5 style="margin-left: 60px;">ปริมาณค่าฝุ่นล่าสุด pm2.5 (µg./m3)</h5>
-          <svg id="fillgauge4" width="100%" height="200" style="margin-top: 20px;"></svg>
-        </div>
-        <div class="column" style="margin-top: 100px;">
-          <div class="row">
-            <div class="column" id="circle_blue" style="margin-bottom: 10px;margin-top: 8px;"></div>
-            <div class="column" style="height: 10px;">
-              <h6>คุณภาพอากาศดีมาก</h6>
-            </div>
-          </div>
-          <div class="row">
-            <div class="column" id="circle_green" style="margin-bottom: 10px;margin-top: 8px;"></div>
-            <div class="column" style="height: 10px;">
-              <h6>คุณภาพอากาศดี</h6>
-            </div>
-          </div>
-          <div class="row">
-            <div class="column" id="circle_yellow" style="margin-bottom: 10px;margin-top: 8px;"></div>
-            <div class="column" style="height: 10px;">
-              <h6>คุณภาพอากาศปานกลาง</h6>
-            </div>
-          </div>
-          <div class="row">
-            <div class="column" id="circle_orange" style="margin-bottom: 10px;margin-top: 8px;"></div>
-            <div class="column" style="height: 10px;">
-              <h6>เริ่มมีผลกระทบต่อสุขภาพ</h6>
-            </div>
-          </div>
-          <div class="row">
-            <div class="column" id="circle_red" style="margin-bottom: 10px;margin-top: 8px;"></div>
-            <div class="column" style="height: 10px;">
-              <h6>มีผลกระทบต่อสุขภาพ</h6>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="column45" style="background-color:#bbb;">
-      <div id="mapid"></div>
-    </div>
-    <div style="margin-top: 450px;"></div>
-    <div style=" margin:auto; ">
-      <h6>กราฟแสดงปริมาณค่าฝุ่นแต่ละช่วงเวลา</h6>
-      <div id="graph"></div>
-    </div>
-  </div>
+  <div id="mapid"></div>
+  <!-- <div id="weathermap"></div> -->
+
 
   <script src="js/initMap.js" language="JavaScript"></script>
   <script src="js/dataProcess.js" language="JavaScript"></script>
+
   <script>
-    var config3 = liquidFillGaugeDefaultSettings();
-    config3.textVertPosition = 0.5
-    config3.waveAnimateTime = 1000;
-    config3.valueCountUp = true;
-    config3.displayPercent = false;
-    config3.waveCount = 0.001;
-    config3.waveAnimateTime = 200000;
-    config3.circleThickness = 0.1;
-    config3.circleFillGap = 0.15;
-  </script>
-  <script>
-
-    function loadXMLDoc(myurl, cb) {
-      var xmlhttp;
-      if (window.XMLHttpRequest) {
-        xmlhttp = new XMLHttpRequest();
-      }
-      else {
-        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-      }
-
-      xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-          if (typeof cb === 'function')
-            cb(xmlhttp.responseText);
-        }
-      }
-      xmlhttp.open("GET", myurl, true);
-      xmlhttp.send();
-    }
-    loadXMLDoc('https://tgr2020-quiz2.firebaseio.com/quiz/sensor/team07.json', function (responseText) {
-      x = JSON.parse(responseText)
-      result_sens = [];
-      for (var i in x) {
-        result_sens.push(x[i])
-      }
-      loadXMLDoc('https://tgr2020-quiz2.firebaseio.com/quiz/location/team07.json', function (responseText) {
-        y = JSON.parse(responseText)
-        result_loc = [];
-        for (var i in y) {
-          result_loc.push(y[i])
-        }
-
-
-        var time = [];
-        var value = [];
-        var LatLon = [];
-        var toDay = result_sens[result_sens.length - 1].DevEUI_uplink.Time.substring(0, 10)
-
-
-
-
-
-        i = result_loc.length - 1
-        while (typeof (result_loc[i].latitude) == 'undefined' || typeof (result_loc[i].longitude) == 'undefined') {
-          i -= 1
-        }
-
-        var latestLat = result_loc[i].latitude
-        var latestLon = result_loc[i].longitude
-
-        for (let index in result_sens) {
-          let logDate = result_sens[index].DevEUI_uplink.Time.substring(0, 10)
-          let logValue = parseInt(subHex(result_sens[index].DevEUI_uplink.payload_hex), 16)
-
-          if (logValue !== 0 && logValue !== 191) {
-            let timeIndex = time.indexOf(value)
-            if (timeIndex === -1) {
-              time.push(logDate)
-              value.push(logValue)
-            } else {
-              value[timeIndex] += logValue
-            }
-          }
-        }
-
-        let check = []
-        let sum = 0
-        let avglist = []
-        let count = 0
-        let lat_long = []
-        let maxlist = []
-        let minlist = []
-        let temp = []
-
-        check.push(time[0])
-
-
-
-        for (let i in value) {
-          if (i == value.length - 1) {
-            
-            maxlist.push(Math.max.apply(Math, temp))
-            minlist.push(Math.min.apply(Math, temp))
-            avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
-            
-          }
-          if (!(check.includes(time[i]))) {
-            check.push(time[i])
-            avglist.push(Math.ceil((temp.reduce((a, b) => a + b, 0)) / count))
-            maxlist.push(Math.max.apply(Math, temp))
-            minlist.push(Math.min.apply(Math, temp))
-            temp = []
-            temp.push(value[i])
-            count = 1
-          } else {
-            count += 1
-            temp.push(value[i])
-          }
-        }
-        value = avglist
-        time = check
-
-
-        check = []
-        err_day = ["2019-12-31", "2020-01-02", "2020-01-03", "2020-01-04"]
-        check.push(result_loc[0].timestamp.substring(0, 10))
-        for (let index in result_loc) {
-          if (!(err_day.includes(result_loc[index].timestamp.substring(0, 10)))) {
-            if (!(check.includes(result_loc[index].timestamp.substring(0, 10)))) {
-              let index_latlon = index - 1
-              while (typeof (result_loc[index_latlon].latitude) == 'undefined' || typeof (result_loc[index_latlon].longitude) == 'undefined') {
-                index_latlon -= 1
-              }
-              lat_long.push([result_loc[index_latlon].latitude, result_loc[index_latlon].longitude])
-              check.push(result_loc[index].timestamp.substring(0, 10))
-            }
-          }
-
-        }
-
-
-
-        lat_long.push([latestLat, latestLon])
-        document.getElementById("today").innerHTML = toDay;
-        var csvData = convertToCSV(time, value)
-        var arrData = convertToARR(time, value, minlist, maxlist)
-        var jsonData = convertToJSON(time, value)
-        //------------------------------------------- Bubble -----------------------------------------
-
-        if (value[value.length - 1] <= 25) {
-          // 0-25
-          config3.circleColor = "#00D7FF";
-          config3.textColor = "#0AC9FF";
-          config3.waveTextColor = "#0AC9FF";
-          config3.waveColor = "#C0FFFF";
-        }
-        else if (value[value.length - 1] <= 50) {
-          // 26-50
-          config3.circleColor = "#70F170";
-          config3.textColor = "#64CD3C";
-          config3.waveTextColor = "#64CD3C";
-          config3.waveColor = "#D2FFD2";
-        }
-        else if (value[value.length - 1] <= 100) {
-          // 51-100
-          config3.circleColor = "#FFDC3C";
-          config3.textColor = "#FFB400";
-          config3.waveTextColor = "#FFB400";
-          config3.waveColor = "#FAFAA0";
-        }
-        else if (value[value.length - 1] <= 200) {
-          // 101-200
-          config3.circleColor = "#FFA500";
-          config3.textColor = "#FF8200";
-          config3.waveTextColor = "#FF8200";
-          config3.waveColor = "#FADCA5";
-        }
-        else {
-          // 201 ->->
-          config3.circleColor = "#FF5050";
-          config3.textColor = "#EB0000";
-          config3.waveTextColor = "#EB0000";
-          config3.waveColor = "#FEBEBE";
-        }
-
-        // Selected day value gauge
-        var gauge4 = loadLiquidFillGauge("fillgauge4", value[value.length - 1], config3);
-
-        // Map
-        var map = L.map('mapid').setView([latestLat, latestLon], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        var marker = L.marker([latestLat, latestLon]).addTo(map)
-          .bindPopup('Data collected from here.')
-          .openPopup();
-        // ------------------------------------------ Bar Chart ------------------------------
-        var margin = { top: 40, right: 20, bottom: 70, left: 40 },
-          width = 1200 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
-
-        var parseDate = d3.timeParse("%Y-%m-%d");
-
-        var x = d3.scaleBand().rangeRound([0, width], .05).padding([0.1]);
-
-        var y = d3.scaleLinear().range([height, 0]);
-
-        var xAxis = d3.axisBottom()
-          .scale(x)
-          .tickFormat(d3.timeFormat("%Y-%m-%d"));
-
-        var yAxis = d3.axisLeft()
-          .scale(y)
-          .ticks(15);
-
-        var tip = d3.tip()
-          .attr('class', 'd3-tip')
-          .offset([-10, 0])
-          .html(function (d) {
-            return "<div><h6>PM2.5</h6><span>Average : </span><span style='color:white'>" + d.value + "</span><br><span>Min :</span> <span style='color:white'>" + d.min + "</span><br><span>Max :</span> <span style='color:white'>" + d.max + "</span></div>";
-          })
-
-        var svg = d3.select("#graph").append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-          .append("g")
-          .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
-
-        svg.call(tip);
-        var data = arrData.map(function (d) {
-          return {
-            date: parseDate(d[0]),
-            value: d[1],
-            min: d[2],
-            max: d[3]
-          };
-        })
-
-        x.domain(data.map(function (d) { return d.date; }));
-        y.domain([0, d3.max(data, function (d) { return d.value; })]);
-
-        svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis)
-          .selectAll("text")
-          .style("text-anchor", "end")
-          .attr("dx", "-.8em")
-          .attr("dy", "-.55em")
-          .attr("transform", "rotate(-90)");
-
-        svg.append("g")
-          .attr("class", "y axis")
-          .call(yAxis)
-          .append("text")
-          .attr("transform", "rotate(-90)")
-          .attr("y", 6)
-          .attr("dy", ".71em")
-          .style("text-anchor", "end")
-          .text("Value");
-
-        svg.selectAll(".bar")
-          .data(data)
-          .enter().append("rect")
-          // .style("fill", "steelblue")
-          .style("fill", function (d) { return d.value <= 25 ? "#00D7FF" : (d.value <= 50 ? "#70F170" : (d.value <= 100 ? "#FFDC3C" : (d.value <= 200 ? "#FFA500" : "#FF5050"))); })
-          .attr("x", function (d) { return x(d.date); })
-          .attr("width", x.bandwidth())
-          .attr("y", function (d) { return y(d.value); })
-          .attr("height", function (d) { return height - y(d.value); })
-          .on('mouseover', tip.show)
-          .on('mouseout', tip.hide)
-          .on('click', (data, index) => {
-            // Update map and gauge from clicked bar
-            let selectedValue = data.value
-            let selectedDate = check[index]
-            let selectedCoord = lat_long[index]
-
-
-            config3.circleColor = selectedValue <= 25 ? "#00D7FF" : (selectedValue <= 50 ? "#70F170" : (selectedValue <= 100 ? "#FFDC3C" : (selectedValue <= 200 ? "#FFA500" : "#FF5050")))
-            config3.textColor = selectedValue <= 25 ? "#0AC9FF" : (selectedValue <= 50 ? "#64CD3C" : (selectedValue <= 100 ? "#FFB400" : (selectedValue <= 200 ? "#FF8200" : "#EB0000")))
-            config3.waveTextColor = selectedValue <= 25 ? "#0AC9FF" : (selectedValue <= 50 ? "#64CD3C" : (selectedValue <= 100 ? "#FFB400" : (selectedValue <= 200 ? "#FF8200" : "#EB0000")))
-            config3.waveColor = selectedValue <= 25 ? "#C0FFFF" : (selectedValue <= 50 ? "#D2FFD2" : (selectedValue <= 100 ? "#FAFAA0" : (selectedValue <= 200 ? "#FADCA5" : "#FEBEBE")))
-
-            d3.select("#fillgauge4").remove();
-            d3.select("#gaugetemp").append("svg").attr("id", "fillgauge4").attr("width", '100%').attr("height", 200).attr("style", "margin-top: 20px");
-            gauge4 = loadLiquidFillGauge("fillgauge4", selectedValue, config3)
-
-            document.getElementById("today").innerHTML = selectedDate;
-            marker.setLatLng(selectedCoord).update()
-            map.flyTo(selectedCoord, 13)
-
-          })
-
-
-      });
+    var redIcon = new L.Icon({
+      iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
     });
+    var greenIcon = new L.Icon({
+      iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+    const socket = io();
+    socket.on('connect', function (data) {
+      console.log("Connection established: ", data);
+      socket.emit('request_data', data);
+    })
+    socket.on('receive_data', async function (data) {
+      // console.log("receive: ", data)
+      socket.emit('request_data', data);
+      dataPM25 = JSON.parse(data.pm25_data)
+      dataTrack = JSON.parse(data.track_data)
+      // console.log(dataPM25)
+      // for (var i in dataPM25){
+      // console.log(i)
+      // }
+      arr = []
+      for (var j in dataPM25) {
+        arr.push(dataPM25[j])
+      }
+      dataPM25 = arr
+
+      re = [0, 0, 0, 0]
+      for (var j in re) {
+        re[parseInt(dataPM25[j]._id) % 4] = dataPM25[j]
+      }
+      dataPM25 = re
+
+      pm = []
+      locate = []
+      for (var i in dataPM25) {
+        pm.push((dataPM25[i].value).toString())
+        locate.push([dataPM25[i].lat, dataPM25[i].lon])
+      }
+      console.log(pm)
+      console.log(locate)
+      ////////// DATA MODEL /////////////
+      modelArr = []
+      for (var j in dataTrack) {
+        modelArr.push(dataTrack[j])
+      }
+      list_id = ["7", "04", "22", "25"]
+      temp = [0, 0, 0, 0]
+      event = ['','','','']
+      for (var i in modelArr) {
+        if (modelArr[i]._id == list_id[0]) { 
+          temp[0] = modelArr[i].rssi 
+          event[0] = modelArr[i].event_code
+        }
+        if (modelArr[i]._id == list_id[1]) { 
+          temp[1] = modelArr[i].rssi 
+          event[1] = modelArr[i].event_code
+        }
+        if (modelArr[i]._id == list_id[2]) { 
+          temp[2] = modelArr[i].rssi 
+          event[2] = modelArr[i].event_code
+        }
+        if (modelArr[i]._id == list_id[3]) { 
+          temp[3] = modelArr[i].rssi 
+          event[3] = modelArr[i].event_code
+        }
+      }
+      // console.log(temp)
+      console.log(temp)
+      for (var i in temp) {
+        if (temp[i] == 0) temp[i] = -75
+      }
+
+      const group = [7, 4, 22, 25]
+      data = [[temp[0], temp[1], temp[2], temp[3]]]
+      // data = [[-77, -79, -53, -85]]
+      console.log(data)
+
+      maxIndex = await tf.loadLayersModel('model.json').then(model => {
+        const input = tf.tensor(data)
+        const predicted = model.predict(input)
+        const predProp = predicted.arraySync()[0]
+        const maxIndex = predProp.indexOf(Math.max(...predProp))
+        console.log(group[maxIndex])
+        return maxIndex
+      })
+      console.log(maxIndex)
+      ///////////////////////////////////////////////////////////////////////
+      // Map
+      if (parseInt(pm[maxIndex]) >= 100 && parseInt(pm[maxIndex]) < 200) {
+        alert('ระดับของฝุ่น pm2.5 อยู่ในระดับที่อันตราย')
+      }
+      if (parseInt(pm[maxIndex]) >= 200) {
+        alert('ระดับของฝุ่น pm2.5 อยู่ในระดับที่อันตรายมากๆๆๆ')
+      }
+      alert(event[maxIndex])
+      var list = [greenIcon, greenIcon, greenIcon, greenIcon]
+      list[maxIndex] = redIcon
+
+      var map = L.map('mapid').setView(locate[maxIndex], 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
 
 
+      var marker1 = L.marker([19.166391, 99.901908], { icon: list[0] }).addTo(map)
+        .bindPopup('ศาลหลักเมือง')
+        .on('mouseover', function () {
+          marker1.openPopup()
+        })
+        .on('mouseout', function () {
+          marker1.closePopup()
+        })
+        .bindTooltip('PM2.5: ' + pm[0] + 'µg./m3',
+          {
+            permanent: true,
+            direction: 'bottom',
+            opacity: 0.8
+          });
+
+      var marker2 = L.marker([19.177149, 99.812571], { icon: list[1] }).addTo(map)
+        .bindPopup('วัดอนาลโยทิพยาราม')
+        .on('mouseover', function () {
+          marker2.openPopup()
+        })
+        .on('mouseout', function () {
+          marker2.closePopup()
+        }).bindTooltip('PM2.5: ' + pm[1] + 'µg./m3',
+          {
+            permanent: true,
+            direction: 'bottom',
+            opacity: 0.8
+          });
+
+      var marker3 = L.marker([19.176477, 99.88926], { icon: list[2] }).addTo(map)
+        .bindPopup('วัดศรีโคมดำ')
+        .on('mouseover', function () {
+          marker3.openPopup()
+        })
+        .on('mouseout', function () {
+          marker3.closePopup()
+        }).bindTooltip('PM2.5: ' + pm[2] + 'µg./m3',
+          {
+            permanent: true,
+            direction: 'bottom',
+            opacity: 0.8
+          });
+
+      var marker4 = L.marker([19.021294, 99.897926], { icon: list[3] }).addTo(map)
+        .bindPopup('พระนาคปรก สธ')
+        .on('mouseover', function () {
+          marker4.openPopup()
+        })
+        .on('mouseout', function () {
+          marker4.closePopup()
+        }).bindTooltip('PM2.5: ' + pm[3] + 'µg./m3',
+          {
+            permanent: true,
+            direction: 'bottom',
+            opacity: 0.8
+          });
+    })
+
+
+    // function loadXMLDoc(myurl, cb) {
+    //   var xmlhttp;
+    //   if (window.XMLHttpRequest) {
+    //     xmlhttp = new XMLHttpRequest();
+    //   }
+    //   else {
+    //     xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    //   }
+
+    //   xmlhttp.onreadystatechange = function () {
+    //     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+    //       if (typeof cb === 'function')
+    //         cb(xmlhttp.responseText);
+    //     }
+    //   }
+    //   xmlhttp.open("GET", myurl, true);
+    //   xmlhttp.send();
+    // }
+    // loadXMLDoc('http://202.139.192.177/api/pm25_data/target', async function (responseText) {
+    //   x = JSON.parse(responseText)
+    //   result_pm = [];
+    //   for (var i in x) {
+    //     result_pm.push(x[i])
+    //   }
+    //   pm = []
+    //   locate = []
+    //   re = [0, 0, 0, 0]
+    //   for (var j in re) {
+    //     re[parseInt(result_pm[j]._id) % 4] = result_pm[j]
+    //   }
+    //   result_pm = re
+    //   for (var i in result_pm) {
+    //     pm.push((result_pm[i].value).toString())
+    //     locate.push([result_pm[i].lat, result_pm[i].lon])
+    //   }
+    //   // loadXMLDoc('http://202.139.192.177/api/track_data/target', async function (responseText) {
+    //   //   y = JSON.parse(responseText)
+    //   //   result_track = []
+    //   //   for (var i in y) {
+    //   //     result_track.push(y[i])
+    //   //   }
+
+    //   //   list_id = ['7','04','22','25']
+    //   //   temp = [0,0,0,0]
+    //   //   var count = 0;
+    //   //   for (var i = 0 ; i < 4 ; i++){
+    //   //     if(result[i]._id==list_id[0]) temp[0]=result[i].rssi
+    //   //     if(result[i]._id==list_id[1]) temp[1]=result[i].rssi
+    //   //     if(result[i]._id==list_id[2]) temp[2]=result[i].rssi
+    //   //     if(result[i]._id==list_id[3]) temp[3]=result[i].rssi
+    //   //   }
+
+    //     //////////////////////////////////////// MODEL /////////////////////////////////////////////
+    //     const group = [7, 4, 22, 25]
+    //     // data = [[temp[0], temp[1], temp[2], temp[3]]]
+    //     data = [[-77,-79,-53,-85]]
+    //     console.log(data)
+
+    //     maxIndex = await tf.loadLayersModel('model.json').then(model => {
+    //       const input = tf.tensor(data)
+    //       const predicted = model.predict(input)
+    //       const predProp = predicted.arraySync()[0]
+    //       const maxIndex = predProp.indexOf(Math.max(...predProp))
+    //       console.log(group[maxIndex])
+    //       return maxIndex
+    //     })
+    //     console.log(maxIndex)
+    //     ///////////////////////////////////////////////////////////////////////
+    //     // console.log(result)
+    //     // Map
+
+    //     var map = L.map('mapid').setView(locate[maxIndex], 14);
+
+    //     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    //       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    //     }).addTo(map);
+
+    //     // const location = []
+    //     // if (maxIndex == 0) let iicon = redIcon
+    //     var list = [greenIcon, greenIcon, greenIcon, greenIcon]
+    //     list[maxIndex] = redIcon
+
+
+    //     var marker1 = L.marker([19.166391, 99.901908], { icon: list[0] }).addTo(map)
+    //       .bindPopup('ศาลหลักเมือง')
+    //       .on('mouseover', function () {
+    //         marker1.openPopup()
+    //       })
+    //       .on('mouseout', function () {
+    //         marker1.closePopup()
+    //       })
+    //       .bindTooltip('PM2.5: ' + pm[0] + 'µg./m3',
+    //         {
+    //           permanent: true,
+    //           direction: 'bottom',
+    //           opacity: 0.8
+    //         });
+
+    //     var marker2 = L.marker([19.177149, 99.812571], { icon: list[1] }).addTo(map)
+    //       .bindPopup('วัดอนาลโยทิพยาราม')
+    //       .on('mouseover', function () {
+    //         marker2.openPopup()
+    //       })
+    //       .on('mouseout', function () {
+    //         marker2.closePopup()
+    //       }).bindTooltip('PM2.5: ' + pm[1] + 'µg./m3',
+    //         {
+    //           permanent: true,
+    //           direction: 'bottom',
+    //           opacity: 0.8
+    //         });
+
+    //     var marker3 = L.marker([19.176477, 99.88926], { icon: list[2] }).addTo(map)
+    //       .bindPopup('วัดศรีโคมดำ')
+    //       .on('mouseover', function () {
+    //         marker3.openPopup()
+    //       })
+    //       .on('mouseout', function () {
+    //         marker3.closePopup()
+    //       }).bindTooltip('PM2.5: ' + pm[2] + 'µg./m3',
+    //         {
+    //           permanent: true,
+    //           direction: 'bottom',
+    //           opacity: 0.8
+    //         });
+
+    //     var marker4 = L.marker([19.021294, 99.897926], { icon: list[3] }).addTo(map)
+    //       .bindPopup('พระนาคปรก สธ')
+    //       .on('mouseover', function () {
+    //         marker4.openPopup()
+    //       })
+    //       .on('mouseout', function () {
+    //         marker4.closePopup()
+    //       }).bindTooltip('PM2.5: ' + pm[3] + 'µg./m3',
+    //         {
+    //           permanent: true,
+    //           direction: 'bottom',
+    //           opacity: 0.8
+    //         });
+    //   })
+    // })
 
   </script>
 
